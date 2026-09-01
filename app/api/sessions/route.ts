@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import type { SessionApiResponse } from '@/types/workflow';
 
+export const dynamic = 'force-static';
+
 // ─────────────────────────────────────────────────────────────
 //  GET /api/sessions?sessionId=<uuid>
 //  Returns the session row for the given session_id.

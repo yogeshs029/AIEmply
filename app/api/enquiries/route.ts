@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { CustomerEnquiryPayload } from '@/types/enquiry';
 
+export const dynamic = 'force-static';
+
 // ─────────────────────────────────────────────────────────────
 //  GET /api/enquiries?sessionId=<id>&action=prefill
 //  Returns pre-fill data or existing submitted enquiry

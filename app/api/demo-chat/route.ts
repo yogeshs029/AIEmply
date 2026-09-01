@@ -4,6 +4,8 @@ import { chatService } from '@/services/chatService';
 import { getAIAgentById } from '@/config/aiAgents';
 import { DemoChatMessage } from '@/types/demoChat';
 
+export const dynamic = 'force-static';
+
 // ─────────────────────────────────────────────────────────────
 //  GET /api/demo-chat?sessionId=<id>
 //  Returns the chat history for the session or checks health
