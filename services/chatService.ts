@@ -38,8 +38,8 @@ export class UnifiedChatService implements ChatProvider {
    */
   async generateResponse(params: ChatGenerateParams): Promise<ChatGenerateResult> {
     // 1. Check if OpenAI is configured
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (openaiKey && openaiKey.trim().length > 10) {
+    const openaiHealth = await openAIChatService.healthCheck();
+    if (openaiHealth.online) {
       try {
         return await openAIChatService.generateResponse(params);
       } catch (err) {

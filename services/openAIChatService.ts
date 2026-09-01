@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   ChatProvider,
   ChatProviderHealth,
@@ -5,8 +7,48 @@ import {
   ChatGenerateResult,
 } from '@/types/chat';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+function getOpenAIKeyFromEnv(): string {
+  if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim().length > 10) {
+    return process.env.OPENAI_API_KEY.trim();
+  }
+
+  // Fallback: read directly from .env.local if not loaded into process.env yet
+  try {
+    const envPath = path.join(process.cwd(), '.env.local');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf-8');
+      const match = content.match(/OPENAI_API_KEY\s*=\s*(.+)/);
+      if (match && match[1]) {
+        return match[1].trim().replace(/^["']|["']$/g, '');
+      }
+    }
+  } catch {
+    // Ignore file read errors
+  }
+
+  return '';
+}
+
+function getOpenAIModelFromEnv(): string {
+  if (process.env.OPENAI_MODEL && process.env.OPENAI_MODEL.trim().length > 0) {
+    return process.env.OPENAI_MODEL.trim();
+  }
+
+  try {
+    const envPath = path.join(process.cwd(), '.env.local');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf-8');
+      const match = content.match(/OPENAI_MODEL\s*=\s*(.+)/);
+      if (match && match[1]) {
+        return match[1].trim().replace(/^["']|["']$/g, '');
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  return 'gpt-4o-mini';
+}
 
 const PHONE_REGEX = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b\d{10,12}\b/;
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -21,24 +63,18 @@ function extractCleanName(text: string): string {
 }
 
 export class OpenAIProvider implements ChatProvider {
-  private apiKey: string;
-  private model: string;
-
-  constructor() {
-    this.apiKey = OPENAI_API_KEY;
-    this.model = OPENAI_MODEL;
-  }
-
   /**
    * Checks if OpenAI API key is configured
    */
   async healthCheck(): Promise<ChatProviderHealth> {
-    const key = process.env.OPENAI_API_KEY || this.apiKey;
-    if (key && key.trim().length > 10) {
+    const key = getOpenAIKeyFromEnv();
+    const model = getOpenAIModelFromEnv();
+
+    if (key && key.length > 10) {
       return {
         online: true,
         provider: 'openai',
-        model: process.env.OPENAI_MODEL || this.model,
+        model,
       };
     }
 
@@ -85,8 +121,8 @@ Always respond in character as the AI ${agent.role}.`;
    * Generates a contextual LLM response via OpenAI API with structured lead extraction
    */
   async generateResponse(params: ChatGenerateParams): Promise<ChatGenerateResult> {
-    const key = process.env.OPENAI_API_KEY || this.apiKey;
-    const activeModel = process.env.OPENAI_MODEL || this.model;
+    const key = getOpenAIKeyFromEnv();
+    const activeModel = getOpenAIModelFromEnv();
 
     const text = params.userMessage.trim();
     const phoneMatch = text.match(PHONE_REGEX);
